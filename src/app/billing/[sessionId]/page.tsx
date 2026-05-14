@@ -6,6 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { getCompletedSessionBilling } from "@/lib/parking";
 import { requireSession } from "@/lib/session";
+import { PaymentButton } from "./payment-button";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 
 const toCurrency = (amountCents: number) => `INR ${(amountCents / 100).toFixed(2)}`;
 
@@ -36,6 +44,8 @@ export default async function BillingPage({ params }: Props) {
     1,
     differenceInMinutes(new Date(endedAt), new Date(billingResult.startedAt)),
   );
+
+   
 
   return (
     <main className="container mx-auto px-4 py-6 sm:py-10">
@@ -92,9 +102,7 @@ export default async function BillingPage({ params }: Props) {
             <Link href="/" className={buttonVariants({ variant: "outline" })}>
               Back to dashboard
             </Link>
-            <Button className="bg-linear-to-r from-primary to-violet-500 text-primary-foreground hover:opacity-95">
-              Pay now
-            </Button>
+           <PaymentButton amount={totalAmountCents} />
           </div>
         </CardContent>
       </Card>
