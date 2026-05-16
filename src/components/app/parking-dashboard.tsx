@@ -3,14 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceStrict } from "date-fns";
 import { useRouter } from "next/navigation";
-import { CarFront, Clock3, Loader2, LogOut, Wallet } from "lucide-react";
+import {
+  CarFront,
+  Clock3,
+  Loader2,
+  LogOut,
+  SparklesIcon,
+  Wallet,
+} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 type Slot = {
   id: string;
@@ -37,7 +58,8 @@ type ParkingState = {
   activeForUser: Session[];
 };
 
-const toCurrency = (amountCents: number) => `INR ${(amountCents / 100).toFixed(2)}`;
+const toCurrency = (amountCents: number) =>
+  `INR ${(amountCents / 100).toFixed(2)}`;
 
 export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
   const router = useRouter();
@@ -55,13 +77,19 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
     const payload = (await response.json()) as ParkingState | { error: string };
 
     if (!response.ok) {
-      throw new Error("error" in payload ? payload.error : "Failed to load parking state.");
+      throw new Error(
+        "error" in payload ? payload.error : "Failed to load parking state.",
+      );
     }
 
     setState(payload as ParkingState);
     setReferenceNowMs(Date.now());
     setTick(0);
   };
+
+  const [vehicleType, setVehicleType] = useState<
+    "all" | "compact" | "sedan" | "suv"
+  >("all");
 
   useEffect(() => {
     const run = async () => {
@@ -70,7 +98,11 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
         setError("");
         await fetchState();
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load data.");
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load data.",
+        );
       } finally {
         setLoading(false);
       }
@@ -93,7 +125,8 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
   }, []);
 
   const activeSession = state?.activeForUser[0] ?? null;
-  const availableSlots = state?.slots.filter((slot) => slot.status === "available") ?? [];
+  const availableSlots =
+    state?.slots.filter((slot) => slot.status === "available") ?? [];
   const effectiveSelectedSlotId = selectedSlotId || availableSlots[0]?.id || "";
   const nowMs = referenceNowMs + tick * 1000;
 
@@ -123,7 +156,10 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
         }),
       });
 
-      const payload = (await response.json()) as { error?: string; sessionId?: string };
+      const payload = (await response.json()) as {
+        error?: string;
+        sessionId?: string;
+      };
 
       if (!response.ok) {
         throw new Error(payload.error ?? "Failed to check in.");
@@ -132,7 +168,11 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
       setVehicleNumber("");
       await fetchState();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to check in.");
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Failed to check in.",
+      );
     } finally {
       setBusy(false);
     }
@@ -150,7 +190,10 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
         body: JSON.stringify({ sessionId: activeSession.id }),
       });
 
-      const payload = (await response.json()) as { error?: string; sessionId?: string };
+      const payload = (await response.json()) as {
+        error?: string;
+        sessionId?: string;
+      };
 
       if (!response.ok) {
         throw new Error(payload.error ?? "Failed to checkout.");
@@ -162,7 +205,11 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
 
       router.push(`/billing/${payload.sessionId}`);
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to checkout.");
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Failed to checkout.",
+      );
     } finally {
       setBusy(false);
     }
@@ -181,13 +228,21 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
     );
   }
 
+  const filteredSlots =
+    vehicleType === "all"
+      ? state?.slots
+      : state?.slots.filter((slot) => slot.slotType === vehicleType);
+
   return (
     <div className="w-full space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="bg-linear-to-r from-primary to-violet-500 bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
-            ParkEase Dashboard
-          </h1>
+          <div className="flex items-center gap-x-2">
+            <SparklesIcon className="text-violet-500" />
+            <h1 className="bg-linear-to-r from-primary to-violet-500 bg-clip-text text-2xl font-semibold text-transparent sm:text-3xl">
+              ParkEase Dashboard
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground">
             Automated slot assignment with live duration and billing.
           </p>
@@ -197,7 +252,16 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Card className="glass-card hover-lift border-primary/20">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Total slots</p>
+              <p className="text-2xl font-semibold">{20}</p>
+            </div>
+            <CarFront className="size-5 text-primary" />
+          </CardContent>
+        </Card>
         <Card className="glass-card hover-lift border-primary/20">
           <CardContent className="flex items-center justify-between p-4">
             <div>
@@ -229,16 +293,65 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
         </Card>
       </div>
 
-      {error ? <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="glass-card lg:col-span-2 border-primary/20">
           <CardHeader>
-            <CardTitle>Parking Slots</CardTitle>
-            <CardDescription>Live inventory for all slots.</CardDescription>
+            <div className="w-full flex justify-between items-center">
+              <div>
+                <CardTitle>Parking Slots</CardTitle>
+                <CardDescription>Live inventory for all slots.</CardDescription>
+              </div>
+              <Select
+                value={vehicleType}
+                onValueChange={(value) =>
+                  setVehicleType(value as "all" | "compact" | "sedan" | "suv")
+                }
+              >
+                <SelectTrigger className="w-[280px]">
+                  <SelectValue
+                    defaultValue={`all`}
+                    placeholder="Select Vehicle Type"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem
+                      onClick={() => setVehicleType("all")}
+                      value="all"
+                    >
+                      All
+                    </SelectItem>
+                    <SelectItem
+                      onClick={() => setVehicleType("compact")}
+                      value="compact"
+                    >
+                      Compact
+                    </SelectItem>
+                    <SelectItem
+                      onClick={() => setVehicleType("sedan")}
+                      value="sedan"
+                    >
+                      Sedan
+                    </SelectItem>
+                    <SelectItem
+                      onClick={() => setVehicleType("suv")}
+                      value="suv"
+                    >
+                      SUV
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {state?.slots.map((slot) => {
+            {filteredSlots?.map((slot) => {
               const occupied = slot.status === "occupied";
 
               return (
@@ -253,10 +366,16 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-medium">{slot.label}</span>
-                    <Badge variant={occupied ? "secondary" : "default"}>{slot.status}</Badge>
+                    <Badge variant={occupied ? "secondary" : "default"}>
+                      {slot.status}
+                    </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground uppercase">{slot.slotType}</p>
-                  <p className="text-sm mt-1">{toCurrency(slot.hourlyRateCents)}/hr</p>
+                  <p className="text-xs text-muted-foreground uppercase">
+                    {slot.slotType}
+                  </p>
+                  <p className="text-sm mt-1">
+                    {toCurrency(slot.hourlyRateCents)}/hr
+                  </p>
                 </button>
               );
             })}
@@ -265,7 +384,9 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
 
         <Card className="glass-card border-primary/20">
           <CardHeader>
-            <CardTitle>{activeSession ? "Active Session" : "Start Parking"}</CardTitle>
+            <CardTitle>
+              {activeSession ? "Active Session" : "Start Parking"}
+            </CardTitle>
             <CardDescription>
               {activeSession
                 ? "Track live pricing and checkout when ready."
@@ -283,14 +404,20 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <div className="space-y-2 rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-sm text-muted-foreground">Duration</p>
                   <p className="font-medium">
-                    {formatDistanceStrict(new Date(activeSession.startedAt), nowMs, {
-                      roundingMethod: "floor",
-                    })}
+                    {formatDistanceStrict(
+                      new Date(activeSession.startedAt),
+                      nowMs,
+                      {
+                        roundingMethod: "floor",
+                      },
+                    )}
                   </p>
                 </div>
                 <div className="space-y-2 rounded-lg border border-primary/15 bg-primary/5 p-3">
                   <p className="text-sm text-muted-foreground">Live amount</p>
-                  <p className="text-xl font-semibold">{toCurrency(currentLivePriceCents)}</p>
+                  <p className="text-xl font-semibold">
+                    {toCurrency(currentLivePriceCents)}
+                  </p>
                 </div>
                 <Button
                   onClick={onCheckout}
@@ -310,15 +437,18 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
                     id="vehicle-number"
                     placeholder="e.g. MH12AB1234"
                     value={vehicleNumber}
-                    onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())}
+                    onChange={(event) =>
+                      setVehicleNumber(event.target.value.toUpperCase())
+                    }
                   />
                 </div>
 
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
                   <p className="text-sm text-muted-foreground">Selected slot</p>
                   <p className="font-medium">
-                    {state?.slots.find((slot) => slot.id === effectiveSelectedSlotId)?.label ??
-                      "None"}
+                    {state?.slots.find(
+                      (slot) => slot.id === effectiveSelectedSlotId,
+                    )?.label ?? "None"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {availableSlots.length} slots currently available
@@ -328,7 +458,9 @@ export function ParkingDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <Button
                   onClick={onCheckIn}
                   className="w-full bg-linear-to-r from-primary to-violet-500 text-primary-foreground hover:opacity-95"
-                  disabled={busy || !effectiveSelectedSlotId || !vehicleNumber.trim()}
+                  disabled={
+                    busy || !effectiveSelectedSlotId || !vehicleNumber.trim()
+                  }
                 >
                   {busy ? <Loader2 className="animate-spin" /> : <CarFront />}
                   Start parking

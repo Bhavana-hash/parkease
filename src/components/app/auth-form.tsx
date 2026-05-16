@@ -4,7 +4,13 @@ import { FormEvent, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -41,7 +47,11 @@ export function AuthForm({ onDone }: { onDone: () => void }) {
 
       onDone();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Authentication failed.");
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Authentication failed.",
+      );
     } finally {
       setPending(false);
     }
@@ -50,9 +60,9 @@ export function AuthForm({ onDone }: { onDone: () => void }) {
   return (
     <Card className="glass-card hover-lift w-full max-w-md border-primary/20 shadow-2xl">
       <CardHeader className="space-y-3">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sparkle">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-2xl font-medium text-primary sparkle">
           <Sparkles className="size-3.5" />
-          Smart Parking
+          Parkease
         </div>
         <CardTitle className="text-2xl">
           {mode === "sign-up" ? "Create account" : "Welcome back"}
